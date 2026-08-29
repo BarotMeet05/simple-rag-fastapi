@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simple-rag"
+version = "0.1.0"
+description = "Production-style AI Document Intelligence & RAG Platform"
+requires-python = ">=3.12"
+
+# ---------------------------------------------------------------------------
+# Runtime dependencies
+# ---------------------------------------------------------------------------
+# fastapi          — the web framework itself
+# uvicorn          — the ASGI server that actually runs FastAPI (like gunicorn
+#                    but for async code); [standard] pulls in httptools + websockets
+# pydantic         — data validation (FastAPI uses it heavily for request/response models)
+# pydantic-settings— typed configuration loaded from environment variables / .env files
+# python-dotenv    — loads .env files into os.environ at startup
+# python-multipart — required by FastAPI to handle file uploads (multipart/form-data)
+# ---------------------------------------------------------------------------
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.9",
+    # ---------------------------------------------------------------------------
+    # Phase 2 — Database
+    # ---------------------------------------------------------------------------
+    # sqlalchemy[asyncio]: ORM with async support (requires greenlet)
+    # asyncpg:             async PostgreSQL driver (used by SQLAlchemy under the hood)
+    # alembic:             schema migration tool — like git for your database schema
+    # ---------------------------------------------------------------------------
+    "sqlalchemy[asyncio]>=2.0.0",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.0",
+    # ---------------------------------------------------------------------------
+    # Phase 2 — Document Parsing
+    # ---------------------------------------------------------------------------
+    # pymupdf:  Fast PDF text extraction with page-level metadata (MuPDF binding)
+    # aiofiles: Async file I/O — writing uploaded files without blocking the event loop
+    # ---------------------------------------------------------------------------
+    "pymupdf>=1.24.0",
+    "aiofiles>=23.2.0",
+]
+
+[project.optional-dependencies]
+# ---------------------------------------------------------------------------
+# Dev / test dependencies — installed with:  pip install -e ".[dev]"
+# ---------------------------------------------------------------------------
+# pytest            — test runner
+# pytest-asyncio    — lets pytest run async test functions
+# httpx             — async HTTP client; FastAPI's TestClient uses it under the hood
+# anyio             — async concurrency library used by pytest-asyncio
+# ---------------------------------------------------------------------------
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+    "anyio>=4.4.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+# ---------------------------------------------------------------------------
+# pytest configuration
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+# asyncio_mode = "auto" means every async test function is automatically
+# treated as an async test — no need to decorate each one with @pytest.mark.asyncio
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]

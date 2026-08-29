@@ -1,0 +1,3 @@
+# This file keeps the data/documents/ directory tracked by git.
+# Actual documents (PDF, TXT) are gitignored — see .gitignore.
+# Add your own test documents here when running locally.
