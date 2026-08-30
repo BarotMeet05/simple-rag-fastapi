@@ -35,7 +35,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.logging import get_logger
-from app.db.models import DocumentModel
+from app.db.models import DocumentModel, DocumentChunkModel
 
 logger = get_logger(__name__)
 
@@ -69,6 +69,17 @@ class DocumentRepository:
         await self.db.refresh(document)  # reload from DB (gets server-generated defaults)
         logger.debug("Document inserted: id=%s", document.document_id)
         return document
+
+    async def create_chunks(self, chunks: list[DocumentChunkModel]) -> None:
+        """
+        Batch insert document chunks.
+        """
+        if not chunks:
+            return
+            
+        self.db.add_all(chunks)
+        await self.db.flush()
+        logger.debug("Inserted %d chunks", len(chunks))
 
     # =========================================================================
     # Read

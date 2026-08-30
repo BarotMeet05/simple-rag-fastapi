@@ -42,7 +42,7 @@ def _make_pdf_upload(filename: str = "test.pdf") -> dict:
     Create a files dict for a minimal valid PDF upload.
     We generate a real PDF using PyMuPDF so magic bytes validation passes.
     """
-    import fitz
+    import pymupdf as fitz
     doc = fitz.open()
     page = doc.new_page()
     page.insert_text((72, 100), "Test PDF content for upload.", fontsize=12)

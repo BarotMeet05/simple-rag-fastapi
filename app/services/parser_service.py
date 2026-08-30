@@ -46,7 +46,7 @@ We apply lightweight normalisation here. Heavy semantic cleaning
 import re
 from dataclasses import dataclass
 
-import fitz  # PyMuPDF — 'fitz' is the module name for historical reasons
+import pymupdf as fitz  # PyMuPDF — 'fitz' alias kept for backward compat in comments
 
 from app.core.logging import get_logger
 

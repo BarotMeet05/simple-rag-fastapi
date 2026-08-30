@@ -137,10 +137,12 @@ async def init_db() -> None:
     In production, you ALWAYS run Alembic. In development, create_all() is
     acceptable for quick iteration (we'll add Alembic too).
     """
-    from app.db.models import DocumentModel  # noqa: F401 — import so Base sees the table
+    from sqlalchemy import text
+    from app.db.models import DocumentChunkModel, DocumentModel  # noqa: F401 — import so Base sees the tables
 
     engine = get_engine()
     async with engine.begin() as conn:
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
 

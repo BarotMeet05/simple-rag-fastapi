@@ -41,9 +41,11 @@ Why UUID primary keys?
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, Integer, String, Text
+from sqlalchemy import DateTime, Integer, String, Text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
+from pgvector.sqlalchemy import Vector
+
 
 from app.db.database import Base
 
@@ -136,4 +138,46 @@ class DocumentModel(Base):
             f"<DocumentModel id={self.document_id} "
             f"filename={self.filename!r} "
             f"status={self.processing_status!r}>"
+        )
+
+
+class DocumentChunkModel(Base):
+    """
+    Represents a chunk of text extracted from a document, along with its vector embedding.
+
+    Table: document_chunks
+    """
+
+    __tablename__ = "document_chunks"
+
+    chunk_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        nullable=False,
+    )
+
+    document_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("documents.document_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    page_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    text_content: Mapped[str] = mapped_column(Text, nullable=False)
+
+    # pgvector column for embeddings. 
+    # Gemini text-embedding-004 outputs 768 dimensions by default.
+    embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(768),
+        nullable=True,
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<DocumentChunkModel chunk_id={self.chunk_id} "
+            f"document_id={self.document_id} "
+            f"index={self.chunk_index}>"
         )

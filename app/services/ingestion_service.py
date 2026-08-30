@@ -53,9 +53,11 @@ import aiofiles
 from app.core.config import get_settings
 from app.core.exceptions import ConflictError, ProcessingError, ValidationError
 from app.core.logging import get_logger
-from app.db.models import DocumentModel
+from app.db.models import DocumentModel, DocumentChunkModel
 from app.repositories.document_repository import DocumentRepository
 from app.services.parser_service import ParseResult, parse_document
+from app.services.chunking_service import chunk_document
+from app.services.embedding_service import EmbeddingService
 
 logger = get_logger(__name__)
 
@@ -84,6 +86,7 @@ class IngestionService:
     def __init__(self, repository: DocumentRepository) -> None:
         self.repository = repository
         self.settings = get_settings()
+        self.embedding_service = EmbeddingService()
 
     # =========================================================================
     # Main pipeline entry point
@@ -170,15 +173,48 @@ class IngestionService:
 
             parse_result = self._parse(file_bytes, file_type)
 
+            # ------------------------------------------------------------------
+            # 6b. Chunking (Phase 3)
+            # ------------------------------------------------------------------
+            logger.debug("Chunking document id=%s", document_id)
+            chunks = chunk_document(parse_result.pages)
+            
+            # ------------------------------------------------------------------
+            # 6c. Embeddings (Phase 3)
+            # ------------------------------------------------------------------
+            logger.debug("Generating embeddings for %d chunks", len(chunks))
+            chunk_texts = [c.text for c in chunks]
+            
+            # If no API key is provided, this will return empty list or fail depending on setup
+            # but we allow it to fail and be caught by the exception handler below
+            embeddings = await self.embedding_service.get_embeddings(chunk_texts)
+            
+            # Create DB models for chunks
+            chunk_models = []
+            for i, chunk in enumerate(chunks):
+                emb = embeddings[i] if embeddings and i < len(embeddings) else None
+                chunk_models.append(
+                    DocumentChunkModel(
+                        document_id=document_id,
+                        page_number=chunk.page_number,
+                        chunk_index=chunk.chunk_index,
+                        text_content=chunk.text,
+                        embedding=emb
+                    )
+                )
+                
+            await self.repository.create_chunks(chunk_models)
+
             # Update status to READY
             await self.repository.update_status(
                 document_id,
                 "ready",
-                chunk_count=0,  # Chunking happens in Phase 3
+                chunk_count=len(chunks),
                 page_count=parse_result.total_pages,
             )
             doc.processing_status = "ready"
             doc.page_count = parse_result.total_pages
+            doc.chunk_count = len(chunks)
 
             logger.info(
                 "Document ingested: id=%s pages=%d chars=%d",

@@ -107,6 +107,17 @@ class Settings(BaseSettings):
         "Format: postgresql+asyncpg://user:password@host:port/dbname",
     )
 
+    # -------------------------------------------------------------------------
+    # AI/LLM Settings (Phase 3)
+    # -------------------------------------------------------------------------
+    gemini_api_key: str | None = Field(
+        default=None,
+        description="Google Gemini API key for embeddings and generation",
+    )
+    embedding_model: str = Field(
+        default="gemini-embedding-001",
+        description="Google Gemini embedding model name",
+    )
 
 # -----------------------------------------------------------------------------
 # Singleton pattern using lru_cache

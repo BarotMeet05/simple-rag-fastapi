@@ -118,7 +118,7 @@ def _make_minimal_pdf(text: str = "Test content for RAG.") -> bytes:
     This is not meant to be educational — it's just test infrastructure.
     In production tests you'd use real sample PDFs.
     """
-    import fitz
+    import pymupdf as fitz
 
     doc = fitz.open()
     page = doc.new_page(width=595, height=842)  # A4 size in points

@@ -69,11 +69,6 @@ def get_document_service(db: AsyncSession = Depends(get_db)) -> DocumentService:
     return DocumentService(db)
 
 
-# =============================================================================
-# Routes
-# =============================================================================
-
-
 @router.post(
     "/documents",
     response_model=DocumentResponse,
