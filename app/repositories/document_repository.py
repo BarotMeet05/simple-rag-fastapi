@@ -114,6 +114,24 @@ class DocumentRepository:
         )
         return list(result.scalars().all())
 
+    async def search_similar_chunks(
+        self, query_embedding: list[float], limit: int = 5
+    ) -> list[tuple[DocumentChunkModel, DocumentModel]]:
+        """
+        Find chunks most similar to the query embedding using cosine distance.
+        Returns a list of tuples containing (DocumentChunkModel, DocumentModel).
+        """
+        # Using pgvector's cosine_distance operator (<=> in SQL)
+        stmt = (
+            select(DocumentChunkModel, DocumentModel)
+            .join(DocumentModel, DocumentChunkModel.document_id == DocumentModel.document_id)
+            .order_by(DocumentChunkModel.embedding.cosine_distance(query_embedding))
+            .limit(limit)
+        )
+        
+        result = await self.db.execute(stmt)
+        return list(result.all())
+
     # =========================================================================
     # Update
     # =========================================================================

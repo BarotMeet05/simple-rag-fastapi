@@ -1,21 +1,25 @@
 # app/api/routes/chat.py
 """
-Chat Route — Phase 1 Stub
-==========================
-Same philosophy as search.py — stub the endpoint early so the API contract
-is defined and the system is testable end-to-end structurally.
-
-The real RAG pipeline (Phases 10–13) will replace this stub body entirely.
+Chat Route — Phase 4
+====================
+This route integrates the complete RAG pipeline:
+Embedding the question -> Searching for context -> Generating the answer.
 """
 
 import uuid
+from fastapi import APIRouter, Depends, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi import APIRouter, status
-
-from app.schemas.chat import ChatRequest, ChatResponse
+from app.db.database import get_db
+from app.repositories.document_repository import DocumentRepository
+from app.schemas.chat import ChatRequest, ChatResponse, Source
+from app.services.rag_service import RAGService
 
 router = APIRouter()
 
+def get_rag_service(db: AsyncSession = Depends(get_db)) -> RAGService:
+    repository = DocumentRepository(db)
+    return RAGService(repository)
 
 @router.post(
     "/chat",
@@ -23,28 +27,36 @@ router = APIRouter()
     status_code=status.HTTP_200_OK,
     tags=["Chat"],
     summary="Ask a question about your documents",
-    description=(
-        "Submit a natural language question. The system retrieves relevant document "
-        "chunks and generates a grounded answer with citations. "
-        "**Phase 10+ implementation.**"
-    ),
+    description="Generates an answer to your question based on the indexed document chunks.",
 )
-async def chat(request: ChatRequest) -> ChatResponse:
+async def chat(
+    request: ChatRequest,
+    service: RAGService = Depends(get_rag_service),
+) -> ChatResponse:
     """
-    POST /chat — Phase 1 stub.
-
-    Returns a placeholder answer indicating the feature is not yet implemented.
-    The response shape is correct — the frontend can be built against it.
+    POST /chat
     """
     conversation_id = request.conversation_id or uuid.uuid4()
+    
+    rag_response = await service.chat(question=request.question, limit=request.top_k)
+    
+    sources = []
+    for source in rag_response.sources:
+        sources.append(
+            Source(
+                chunk_id=source.chunk_id,
+                document_id=uuid.UUID(source.document_id),
+                document_name=source.filename,
+                page_number=source.page_number,
+                relevance_score=1.0, # Dummy for now
+                text_preview=source.text[:200] if request.debug else None
+            )
+        )
 
     return ChatResponse(
-        answer=(
-            "The RAG pipeline is not yet implemented. "
-            "This stub confirms the API endpoint is reachable and the request schema is valid."
-        ),
+        answer=rag_response.answer,
         conversation_id=conversation_id,
-        sources=[],
-        is_grounded=False,
+        sources=sources,
+        is_grounded=len(sources) > 0,
         debug=None,
     )
