@@ -1,0 +1,26 @@
+[
+  {
+    "question": "Can I deploy a new feature on Friday afternoon?",
+    "expected_answer": "No, deployments are strictly prohibited on Fridays to minimize weekend incidents."
+  },
+  {
+    "question": "What kind of laptop will the company provide?",
+    "expected_answer": "The company provides an M3 MacBook Pro with 32GB of RAM."
+  },
+  {
+    "question": "How many reviews do I need on a Pull Request?",
+    "expected_answer": "Every Pull Request must have at least two approving reviews from senior engineers before it can be merged."
+  },
+  {
+    "question": "What is the per diem limit for food when traveling?",
+    "expected_answer": "The per diem for food is $50."
+  },
+  {
+    "question": "Will the company pay for my drinks if I go to the hotel bar during a conference?",
+    "expected_answer": "No, alcohol is strictly non-expensable under any circumstances."
+  },
+  {
+    "question": "What is the exact process for requesting a standing desk?",
+    "expected_answer": "I don't have enough information to answer that based on the provided documents. (The policy only mentions ergonomic chairs and a general $200 limit)."
+  }
+]

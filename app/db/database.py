@@ -117,6 +117,11 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     return _async_session_factory
 
 
+# Alias for convenience / backward compatibility
+session_factory = get_session_factory
+
+
+
 # =============================================================================
 # Database initialisation
 # =============================================================================

@@ -185,9 +185,15 @@ class IngestionService:
             logger.debug("Generating embeddings for %d chunks", len(chunks))
             chunk_texts = [c.text for c in chunks]
             
-            # If no API key is provided, this will return empty list or fail depending on setup
-            # but we allow it to fail and be caught by the exception handler below
-            embeddings = await self.embedding_service.get_embeddings(chunk_texts)
+            # Embedding is best-effort: if the API is rate-limited or key is missing,
+            # we still store the chunks (without vectors). They can be embedded later.
+            embeddings = []
+            try:
+                embeddings = await self.embedding_service.get_embeddings(chunk_texts)
+            except Exception as embed_err:
+                logger.warning(
+                    "Embedding failed (chunks saved without vectors): %s", embed_err
+                )
             
             # Create DB models for chunks
             chunk_models = []

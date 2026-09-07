@@ -1,0 +1,13 @@
+Acme Corp Engineering Policy (Effective 2025)
+
+1. Deployment Rules
+Deployments to the production environment are strictly prohibited on Fridays to minimize weekend incidents. All deployments must pass the automated CI/CD pipeline in GitHub Actions with 100% test coverage. During the month of December, there is a global blackout period; no infrastructure or code changes are permitted unless authorized by the VP of Engineering.
+
+2. Hardware Provisioning
+Engineers will be provided with a standard hardware package upon joining. This includes an M3 MacBook Pro (32GB RAM), a wireless mechanical keyboard, and a 27-inch Dell 4K monitor. Requests for additional hardware (e.g., ergonomic chairs) must be routed through the IT service desk and require manager approval for items over $200.
+
+3. Code Review Standards
+Every Pull Request (PR) must have at least two approving reviews from senior engineers before it can be merged into the main branch. PRs must include a detailed description of the changes, a link to the Jira ticket, and screenshots if UI changes were made. Code that reduces the overall test coverage below 85% will be automatically blocked by the pipeline.
+
+4. Expense Policy
+Engineers attending approved conferences may expense up to $150 per night for a hotel and $50 per diem for food. Flights must be booked through the company portal (Navan) at least 14 days in advance to secure economy rates. Alcohol is strictly non-expensable under any circumstances.

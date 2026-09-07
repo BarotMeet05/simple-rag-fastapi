@@ -1,9 +1,10 @@
 import asyncio
 from sqlalchemy import select
-from app.db.database import session_factory
+from app.db.database import get_session_factory
 from app.db.models import DocumentModel, DocumentChunkModel
 
 async def verify_chunks():
+    session_factory = get_session_factory()
     async with session_factory() as session:
         # 1. Get the most recently uploaded document
         result = await session.execute(
