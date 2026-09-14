@@ -72,8 +72,38 @@ class Base(DeclarativeBase):
 
 
 # =============================================================================
-# Engine initialisation
-# =============================================================================
+from sqlalchemy.engine import URL, make_url
+
+
+def parse_async_db_url(raw_url: str) -> tuple[URL, dict]:
+    """
+    Parse raw database URL (e.g. from Neon/Render/libpq) and return a clean
+    SQLAlchemy URL object with asyncpg driver, plus appropriate connect_args.
+
+    Strips libpq-specific query parameters (channel_binding, sslmode, etc.)
+    that asyncpg does not accept as keyword arguments.
+    """
+    u = make_url(raw_url)
+
+    # Check if SSL was requested in query params or if connecting to a remote host
+    has_ssl_param = any(k in u.query for k in ("ssl", "sslmode"))
+    is_remote = bool(u.host and u.host not in ("localhost", "127.0.0.1", "::1"))
+
+    connect_args = {}
+    if has_ssl_param or is_remote:
+        ssl_val = u.query.get("ssl") or u.query.get("sslmode") or "require"
+        if str(ssl_val).lower() not in ("disable", "allow", "false"):
+            connect_args["ssl"] = "require"
+
+    clean_url = URL.create(
+        drivername="postgresql+asyncpg",
+        username=u.username,
+        password=u.password,
+        host=u.host,
+        port=u.port,
+        database=u.database,
+    )
+    return clean_url, connect_args
 
 
 def get_engine() -> AsyncEngine:
@@ -87,16 +117,11 @@ def get_engine() -> AsyncEngine:
                 "Add it to your .env file: "
                 "DATABASE_URL=postgresql+asyncpg://raguser:ragpassword@localhost:5432/ragdb"
             )
-        db_url = settings.database_url
-        # Normalize protocol for asyncpg
-        if db_url.startswith("postgresql://"):
-            db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
-        # asyncpg expects 'ssl=' parameter instead of libpq's 'sslmode='
-        if "sslmode=" in db_url:
-            db_url = db_url.replace("sslmode=", "ssl=")
+        clean_url, connect_args = parse_async_db_url(settings.database_url)
 
         _engine = create_async_engine(
-            db_url,
+            clean_url,
+            connect_args=connect_args,
             # Echo=True logs every SQL statement — useful in development, too noisy for production
             echo=settings.debug,
             pool_size=5,
@@ -104,7 +129,7 @@ def get_engine() -> AsyncEngine:
             pool_recycle=3600,
             pool_pre_ping=True,
         )
-        logger.info("Database engine created: url=%s", db_url.split("@")[-1])
+        logger.info("Database engine created: host=%s db=%s", clean_url.host, clean_url.database)
     return _engine
 
 
