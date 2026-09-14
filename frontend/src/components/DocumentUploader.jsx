@@ -5,8 +5,10 @@ import { uploadDocument, fetchDocuments } from '../services/api';
 export default function DocumentUploader() {
   const [documents, setDocuments] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState(null);
   const fileInputRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   useEffect(() => { loadDocuments(); }, []);
 
@@ -19,25 +21,31 @@ export default function DocumentUploader() {
     }
   }
 
-  function showToast(message, type = 'success') {
+  function showToast(message, type = 'success', duration = 5000) {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
+    if (duration > 0) {
+      toastTimerRef.current = setTimeout(() => setToast(null), duration);
+    }
   }
 
   async function handleFile(file) {
-    if (!file) return;
+    if (!file || isUploading) return;
     if (!file.name.endsWith('.pdf') && !file.name.endsWith('.txt')) {
       showToast('Only PDF and TXT files are supported.', 'error');
       return;
     }
 
-    showToast(`Uploading ${file.name}...`, 'info');
+    setIsUploading(true);
+    showToast(`Uploading ${file.name}...`, 'info', 0); // Don't auto-dismiss during upload
     try {
       await uploadDocument(file);
-      showToast(`${file.name} uploaded and indexed.`, 'success');
+      showToast(`${file.name} uploaded and indexed successfully.`, 'success', 5000);
       await loadDocuments();
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast(err.message, 'error', 6000);
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -51,19 +59,26 @@ export default function DocumentUploader() {
     <>
       <div className="upload-section">
         <div
-          className={`upload-zone ${isDragging ? 'dragging' : ''}`}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+          className={`upload-zone ${isDragging ? 'dragging' : ''} ${isUploading ? 'uploading' : ''}`}
+          onDragOver={(e) => { e.preventDefault(); if (!isUploading) setIsDragging(true); }}
           onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
           onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFile(e.dataTransfer.files[0]); }}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => { if (!isUploading) fileInputRef.current?.click(); }}
         >
-          <div className="upload-icon">+</div>
-          <div className="upload-text"><strong>Upload a file</strong> or drag here</div>
+          <div className="upload-icon">{isUploading ? '…' : '+'}</div>
+          <div className="upload-text">
+            {isUploading ? (
+              <strong>Uploading & indexing...</strong>
+            ) : (
+              <><strong>Upload a file</strong> or drag here</>
+            )}
+          </div>
           <div className="upload-hint">PDF, TXT — up to 50 MB</div>
           <input
             ref={fileInputRef}
             type="file"
             accept=".pdf,.txt"
+            disabled={isUploading}
             style={{ display: 'none' }}
             onChange={(e) => { handleFile(e.target.files[0]); e.target.value = ''; }}
           />

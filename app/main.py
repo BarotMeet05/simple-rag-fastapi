@@ -147,14 +147,9 @@ def create_application() -> FastAPI:
     _app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
-        # allow_credentials: allows cookies and Authorization headers across origins
-        # Set True only when you add auth (Phase 16)
         allow_credentials=False,
-        # Which HTTP methods to allow from cross-origin requests
-        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        # Which request headers are allowed
-        allow_headers=["Content-Type", "Accept", "Authorization"],
-        # expose_headers: which response headers the browser can read
+        allow_methods=["*"],
+        allow_headers=["*"],
         expose_headers=["X-Request-ID"],
     )
 

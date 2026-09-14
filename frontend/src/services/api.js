@@ -4,7 +4,8 @@
  * Handles all error formatting so users never see raw stack traces.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const rawBase = import.meta.env.VITE_API_URL || '';
+const API_BASE = rawBase.replace(/\/+$/, '');
 
 // Map ugly backend errors to friendly messages
 function friendlyError(raw) {
@@ -15,8 +16,8 @@ function friendlyError(raw) {
     return 'This file has already been uploaded.';
   if (lower.includes('gemini') || lower.includes('api_key') || lower.includes('missing'))
     return 'AI service is not configured. Please check the API key.';
-  if (lower.includes('econnrefused') || lower.includes('fetch'))
-    return 'Cannot reach the server. Is the backend running?';
+  if (lower.includes('econnrefused') || lower.includes('failed to fetch') || lower.includes('networkerror'))
+    return 'Cannot reach the server. Please check your backend connection or VITE_API_URL.';
   if (raw.length > 120) return 'Something went wrong. Please try again.';
   return raw;
 }
@@ -33,16 +34,24 @@ async function handleResponse(response) {
 export async function uploadDocument(file) {
   const formData = new FormData();
   formData.append('file', file);
-  const response = await fetch(`${API_BASE}/api/v1/documents`, {
-    method: 'POST',
-    body: formData,
-  });
-  return handleResponse(response);
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/documents`, {
+      method: 'POST',
+      body: formData,
+    });
+    return await handleResponse(response);
+  } catch (err) {
+    throw new Error(friendlyError(err.message));
+  }
 }
 
 export async function fetchDocuments() {
-  const response = await fetch(`${API_BASE}/api/v1/documents`);
-  return handleResponse(response);
+  try {
+    const response = await fetch(`${API_BASE}/api/v1/documents`);
+    return await handleResponse(response);
+  } catch (err) {
+    throw new Error(friendlyError(err.message));
+  }
 }
 
 export async function sendChatMessage(question, topK = 5) {
