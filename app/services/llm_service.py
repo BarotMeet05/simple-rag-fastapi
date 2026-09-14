@@ -44,7 +44,7 @@ class LLMService:
         self, 
         question: str, 
         context_chunks: list[dict], 
-        model: str = "gemini-3.6-flash"
+        model: str = "gemini-2.0-flash"
     ) -> str:
         """
         Generate an answer to a question using the provided context chunks.
@@ -71,13 +71,15 @@ class LLMService:
         
         try:
             logger.debug(f"Calling Gemini API to answer question: '{question}'")
-            response = self.client.models.generate_content(
+            import asyncio
+            response = await asyncio.to_thread(
+                self.client.models.generate_content,
                 model=model,
                 contents=user_prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=RAG_SYSTEM_PROMPT,
                     temperature=0.0, # 0.0 forces the model to be deterministic and grounded
-                )
+                ),
             )
             return response.text
             

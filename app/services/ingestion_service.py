@@ -189,10 +189,14 @@ class IngestionService:
             # we still store the chunks (without vectors). They can be embedded later.
             embeddings = []
             try:
-                embeddings = await self.embedding_service.get_embeddings(chunk_texts)
+                import asyncio
+                embeddings = await asyncio.wait_for(
+                    self.embedding_service.get_embeddings(chunk_texts),
+                    timeout=10.0
+                )
             except Exception as embed_err:
                 logger.warning(
-                    "Embedding failed (chunks saved without vectors): %s", embed_err
+                    "Embedding failed or timed out (chunks saved without vectors): %s", embed_err
                 )
             
             # Create DB models for chunks

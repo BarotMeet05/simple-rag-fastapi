@@ -61,8 +61,10 @@ class EmbeddingService:
 
         try:
             logger.debug(f"Calling Gemini API to embed {len(texts)} chunks using model {use_model}")
-            # Gemini SDK allows batch embedding
-            response = self.client.models.embed_content(
+            # Offload synchronous Gemini SDK call to a worker thread so it doesn't block the event loop
+            import asyncio
+            response = await asyncio.to_thread(
+                self.client.models.embed_content,
                 model=use_model,
                 contents=texts,
                 config=types.EmbedContentConfig(
