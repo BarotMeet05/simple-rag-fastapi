@@ -58,6 +58,7 @@ def _model_to_response(doc: DocumentModel) -> DocumentResponse:
         description=doc.description,
         uploaded_at=doc.uploaded_at,
         chunk_count=doc.chunk_count,
+        page_count=doc.page_count,
         error_message=doc.error_message,
     )
 

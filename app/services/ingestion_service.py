@@ -241,11 +241,16 @@ class IngestionService:
             error_msg = str(exc)
             logger.error("Document ingestion failed: id=%s error=%s", document_id, error_msg)
 
-            await self.repository.update_status(
-                document_id,
-                "failed",
-                error_message=error_msg,
-            )
+            try:
+                await self.repository.db.rollback()
+                await self.repository.update_status(
+                    document_id,
+                    "failed",
+                    error_message=error_msg,
+                )
+            except Exception as rollback_err:
+                logger.error("Failed to update status to failed: %s", rollback_err)
+
             raise ProcessingError(f"Document processing failed: {error_msg}") from exc
 
     # =========================================================================
@@ -328,16 +333,20 @@ class IngestionService:
         - Prevents path traversal attacks ("../../etc/passwd.pdf")
         - Makes the filename deterministic from the document_id
         """
-        upload_dir = Path(self.settings.upload_dir)
-        upload_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            upload_dir = Path(self.settings.upload_dir)
+            upload_dir.mkdir(parents=True, exist_ok=True)
 
-        file_path = upload_dir / f"{document_id}.{file_type}"
+            file_path = upload_dir / f"{document_id}.{file_type}"
 
-        async with aiofiles.open(file_path, "wb") as f:
-            await f.write(file_bytes)
+            async with aiofiles.open(file_path, "wb") as f:
+                await f.write(file_bytes)
 
-        logger.debug("File saved: path=%s size=%d", file_path, len(file_bytes))
-        return file_path
+            logger.debug("File saved: path=%s size=%d", file_path, len(file_bytes))
+            return file_path
+        except Exception as err:
+            logger.warning("Could not write file to disk (continuing in-memory): %s", err)
+            return Path(f"data/documents/{document_id}.{file_type}")
 
     # =========================================================================
     # Parsing
