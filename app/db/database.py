@@ -87,8 +87,16 @@ def get_engine() -> AsyncEngine:
                 "Add it to your .env file: "
                 "DATABASE_URL=postgresql+asyncpg://raguser:ragpassword@localhost:5432/ragdb"
             )
+        db_url = settings.database_url
+        # Normalize protocol for asyncpg
+        if db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        # asyncpg expects 'ssl=' parameter instead of libpq's 'sslmode='
+        if "sslmode=" in db_url:
+            db_url = db_url.replace("sslmode=", "ssl=")
+
         _engine = create_async_engine(
-            settings.database_url,
+            db_url,
             # Echo=True logs every SQL statement — useful in development, too noisy for production
             echo=settings.debug,
             pool_size=5,
@@ -96,7 +104,7 @@ def get_engine() -> AsyncEngine:
             pool_recycle=3600,
             pool_pre_ping=True,
         )
-        logger.info("Database engine created: url=%s", settings.database_url.split("@")[-1])
+        logger.info("Database engine created: url=%s", db_url.split("@")[-1])
     return _engine
 
 
