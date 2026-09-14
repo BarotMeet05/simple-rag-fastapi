@@ -72,3 +72,10 @@ data/documents/*.docx
 *.pkl
 *.npy
 evaluation/results/
+
+# =============================================================================
+# Frontend (Node.js / Vite)
+# =============================================================================
+node_modules/
+frontend/dist/
+frontend/.vite/

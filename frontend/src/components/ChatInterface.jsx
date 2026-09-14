@@ -1,12 +1,11 @@
-// frontend/src/components/ChatInterface.jsx
 import { useState, useRef, useEffect } from 'react';
 import { sendChatMessage } from '../services/api';
 
 const SUGGESTIONS = [
-  "What technologies are mentioned?",
-  "Summarize the key points",
-  "What are the deployment rules?",
-  "What is the expense policy?",
+  "What technologies are mentioned in the documents?",
+  "Give me a summary of the key points",
+  "What are the rules around deployments?",
+  "Tell me about the expense policy",
 ];
 
 export default function ChatInterface() {
@@ -24,22 +23,23 @@ export default function ChatInterface() {
     const question = questionOverride || input.trim();
     if (!question || isLoading) return;
 
-    setMessages((prev) => [...prev, { role: 'user', content: question }]);
+    setMessages(prev => [...prev, { role: 'user', content: question }]);
     setInput('');
     setIsLoading(true);
 
     try {
-      const response = await sendChatMessage(question);
-      setMessages((prev) => [...prev, {
+      const res = await sendChatMessage(question);
+      setMessages(prev => [...prev, {
         role: 'assistant',
-        content: response.answer,
-        sources: response.sources || [],
+        content: res.answer,
+        sources: res.sources || [],
       }]);
     } catch (err) {
-      setMessages((prev) => [...prev, {
+      setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Something went wrong: ${err.message}`,
+        content: err.message,
         sources: [],
+        isError: true,
       }]);
     } finally {
       setIsLoading(false);
@@ -54,22 +54,20 @@ export default function ChatInterface() {
     }
   }
 
-  const showWelcome = messages.length === 0 && !isLoading;
-
   return (
     <div className="main-content">
       <div className="chat-header">
-        <h1>Ask anything about your documents</h1>
+        <h1>Chat</h1>
       </div>
 
       <div className="chat-messages">
-        {showWelcome ? (
+        {messages.length === 0 && !isLoading ? (
           <div className="chat-welcome">
-            <div className="welcome-icon">⚡</div>
-            <h2 className="welcome-title">What do you want to know?</h2>
+            <div className="welcome-icon">D</div>
+            <h2 className="welcome-title">Ask anything about your documents</h2>
             <p className="welcome-sub">
-              Upload documents in the sidebar, then ask questions here. 
-              Answers are generated from your files only — no outside data.
+              Upload a PDF or text file in the sidebar, then ask questions here.
+              Answers come only from your documents — nothing made up.
             </p>
             <div className="suggestion-chips">
               {SUGGESTIONS.map((s, i) => (
@@ -86,13 +84,15 @@ export default function ChatInterface() {
                 <div className="message-label">
                   {msg.role === 'user' ? 'You' : 'DocuMind'}
                 </div>
-                <div className="message-bubble">{msg.content}</div>
+                <div className={`message-bubble ${msg.isError ? 'error' : ''}`}>
+                  {msg.content}
+                </div>
                 {msg.sources && msg.sources.length > 0 && (
                   <div className="sources-container">
-                    <span className="sources-title">Sources:</span>
+                    <span className="sources-title">Sources</span>
                     {msg.sources.map((src, si) => (
                       <span key={si} className="source-chip">
-                        {src.document_name} p.{src.page_number}
+                        {src.document_name}, page {src.page_number}
                       </span>
                     ))}
                   </div>
@@ -104,7 +104,7 @@ export default function ChatInterface() {
                 <div className="message-label">DocuMind</div>
                 <div className="message-bubble">
                   <div className="loading-dots">
-                    <span></span><span></span><span></span>
+                    <span /><span /><span />
                   </div>
                 </div>
               </div>
@@ -119,9 +119,9 @@ export default function ChatInterface() {
           <textarea
             ref={inputRef}
             className="chat-input"
-            placeholder="Ask a question..."
+            placeholder="Type your question here..."
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
             disabled={isLoading}

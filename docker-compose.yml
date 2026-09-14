@@ -38,7 +38,7 @@ services:
     ports:
       # host_port:container_port
       # 5432 is PostgreSQL's default port
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       # Named volume — persists data between container restarts
       - postgres_data:/var/lib/postgresql/data

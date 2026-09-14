@@ -1,41 +1,44 @@
 /* ==========================================================================
-   DocuMind — Design System v3
-   Middle ground: visually rich but not "AI generated".
-   Inspired by Linear's dark theme + Raycast's warmth + Vercel's clarity.
+   DocuMind — Light Theme
+   Clean, professional light theme inspired by Notion, Linear, and Stripe.
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg-app: #0c0c0f;
-  --bg-sidebar: #131316;
-  --bg-elevated: #1a1a1f;
-  --bg-hover: #222228;
-  --bg-input: #16161a;
+  --bg-app: #ffffff;
+  --bg-sidebar: #f8f9fa;
+  --bg-elevated: #f1f3f5;
+  --bg-hover: #e9ecef;
+  --bg-input: #ffffff;
 
-  --text-primary: #ececf1;
-  --text-secondary: #8e8ea0;
-  --text-muted: #5a5a6e;
+  --text-primary: #1a1a2e;
+  --text-secondary: #495057;
+  --text-muted: #868e96;
 
-  /* Indigo-violet accent — richer than plain blue, less garish than neon purple */
-  --accent: #6366f1;
-  --accent-hover: #818cf8;
-  --accent-subtle: rgba(99, 102, 241, 0.08);
-  --accent-subtle-hover: rgba(99, 102, 241, 0.14);
-  --accent-border: rgba(99, 102, 241, 0.2);
-  --accent-glow: 0 0 24px rgba(99, 102, 241, 0.15);
+  --accent: #5046e5;
+  --accent-hover: #6c63ff;
+  --accent-light: #eef2ff;
+  --accent-border: rgba(80, 70, 229, 0.2);
 
-  --green: #10b981;
-  --yellow: #f59e0b;
-  --red: #ef4444;
+  --green: #059669;
+  --green-bg: #ecfdf5;
+  --yellow: #d97706;
+  --yellow-bg: #fffbeb;
+  --red: #dc2626;
+  --red-bg: #fef2f2;
 
-  --border: rgba(255, 255, 255, 0.06);
-  --border-hover: rgba(255, 255, 255, 0.1);
+  --border: #e5e7eb;
+  --border-hover: #d1d5db;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
 
   --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --radius: 10px;
   --radius-lg: 14px;
-  --transition: 180ms ease;
+  --transition: 150ms ease;
 }
 
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,22 +55,7 @@ body {
   line-height: 1.55;
 }
 
-/* Subtle ambient glow in background */
-body::after {
-  content: '';
-  position: fixed;
-  top: -200px;
-  right: -200px;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
 #root {
-  position: relative;
-  z-index: 1;
   min-height: 100vh;
   display: flex;
 }
@@ -94,7 +82,7 @@ body::after {
 }
 
 .sidebar-header {
-  padding: 20px 20px 16px;
+  padding: 20px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -105,15 +93,16 @@ body::after {
 }
 
 .logo-icon {
-  width: 30px;
-  height: 30px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  width: 32px;
+  height: 32px;
+  background: var(--accent);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  box-shadow: var(--accent-glow);
+  font-size: 15px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(80, 70, 229, 0.3);
 }
 
 .logo-text {
@@ -137,27 +126,26 @@ body::after {
 }
 
 .upload-zone {
-  border: 1.5px dashed rgba(99, 102, 241, 0.25);
+  border: 2px dashed var(--border);
   border-radius: var(--radius);
   padding: 24px 16px;
   text-align: center;
   cursor: pointer;
   transition: all var(--transition);
-  background: var(--accent-subtle);
+  background: white;
 }
 
 .upload-zone:hover,
 .upload-zone.dragging {
   border-color: var(--accent);
-  background: var(--accent-subtle-hover);
-  transform: translateY(-1px);
-  box-shadow: var(--accent-glow);
+  background: var(--accent-light);
 }
 
 .upload-icon {
-  font-size: 22px;
+  font-size: 24px;
   margin-bottom: 6px;
-  color: var(--accent-hover);
+  color: var(--accent);
+  font-weight: 300;
 }
 
 .upload-text {
@@ -167,7 +155,7 @@ body::after {
 
 .upload-text strong {
   color: var(--text-primary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .upload-hint {
@@ -209,22 +197,22 @@ body::after {
 }
 
 .doc-icon {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 
 .doc-icon.pdf {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--red-bg);
 }
 
 .doc-icon.txt {
-  background: rgba(99, 102, 241, 0.1);
+  background: var(--accent-light);
 }
 
 .doc-info {
@@ -238,6 +226,7 @@ body::after {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-primary);
 }
 
 .doc-meta {
@@ -245,7 +234,7 @@ body::after {
   color: var(--text-muted);
   display: flex;
   gap: 6px;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 .doc-status {
@@ -259,24 +248,19 @@ body::after {
 }
 
 .doc-status.ready {
-  background: rgba(16, 185, 129, 0.12);
+  background: var(--green-bg);
   color: var(--green);
 }
 
-.doc-status.processing {
-  background: rgba(245, 158, 11, 0.12);
-  color: var(--yellow);
-  animation: pulse 2s infinite;
-}
-
+.doc-status.processing,
 .doc-status.uploaded {
-  background: rgba(245, 158, 11, 0.12);
+  background: var(--yellow-bg);
   color: var(--yellow);
   animation: pulse 2s infinite;
 }
 
 .doc-status.failed {
-  background: rgba(239, 68, 68, 0.12);
+  background: var(--red-bg);
   color: var(--red);
 }
 
@@ -306,6 +290,7 @@ body::after {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: -0.01em;
+  color: var(--text-primary);
 }
 
 /* --------------------------------------------------------------------------
@@ -318,6 +303,7 @@ body::after {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  background: #fafbfc;
 }
 
 /* Welcome */
@@ -333,19 +319,20 @@ body::after {
 }
 
 .welcome-icon {
-  width: 52px;
-  height: 52px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  border-radius: 14px;
+  width: 56px;
+  height: 56px;
+  background: var(--accent);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
-  box-shadow: var(--accent-glow);
+  font-size: 26px;
+  color: white;
+  box-shadow: 0 4px 16px rgba(80, 70, 229, 0.25);
 }
 
 .welcome-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.03em;
@@ -361,17 +348,17 @@ body::after {
 .suggestion-chips {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 16px;
-  max-width: 480px;
+  gap: 10px;
+  margin-top: 20px;
+  max-width: 500px;
   width: 100%;
 }
 
 .suggestion-chip {
-  background: var(--bg-elevated);
+  background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 12px 16px;
+  padding: 14px 16px;
   font-size: 13px;
   color: var(--text-secondary);
   cursor: pointer;
@@ -379,25 +366,26 @@ body::after {
   transition: all var(--transition);
   text-align: left;
   line-height: 1.4;
+  box-shadow: var(--shadow-sm);
 }
 
 .suggestion-chip:hover {
-  background: var(--bg-hover);
+  background: var(--accent-light);
   border-color: var(--accent-border);
-  color: var(--text-primary);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 /* Messages */
 .message {
   max-width: 720px;
   width: 100%;
-  animation: fadeIn 0.25s ease;
+  animation: fadeIn 0.2s ease;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -422,16 +410,18 @@ body::after {
 }
 
 .message.user .message-bubble {
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  background: var(--accent);
   color: white;
   border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(80, 70, 229, 0.2);
 }
 
 .message.assistant .message-bubble {
-  background: var(--bg-elevated);
+  background: white;
   border: 1px solid var(--border);
   border-bottom-left-radius: 4px;
   color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Sources */
@@ -454,12 +444,12 @@ body::after {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: var(--accent-subtle);
+  background: var(--accent-light);
   border: 1px solid var(--accent-border);
   border-radius: 99px;
   padding: 3px 12px;
   font-size: 11px;
-  color: var(--accent-hover);
+  color: var(--accent);
   font-weight: 500;
 }
 
@@ -501,16 +491,17 @@ body::after {
   align-items: flex-end;
   max-width: 720px;
   margin: 0 auto;
-  background: var(--bg-input);
+  background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 4px 4px 4px 16px;
-  transition: border-color var(--transition);
+  transition: all var(--transition);
+  box-shadow: var(--shadow-sm);
 }
 
 .chat-input-wrapper:focus-within {
-  border-color: var(--accent-border);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.06);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(80, 70, 229, 0.08);
 }
 
 .chat-input {
@@ -535,7 +526,7 @@ body::after {
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  background: var(--accent);
   border: none;
   color: white;
   font-size: 16px;
@@ -548,12 +539,12 @@ body::after {
 }
 
 .send-button:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: var(--accent-glow);
+  background: var(--accent-hover);
+  box-shadow: 0 2px 8px rgba(80, 70, 229, 0.3);
 }
 
 .send-button:disabled {
-  opacity: 0.25;
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
@@ -564,11 +555,11 @@ body::after {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: var(--bg-elevated);
+  background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 18px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-lg);
   animation: slideIn 0.25s ease;
   z-index: 100;
   min-width: 260px;
@@ -597,8 +588,8 @@ body::after {
    -------------------------------------------------------------------------- */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.14); }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
 /* --------------------------------------------------------------------------
    Empty state
@@ -611,3 +602,25 @@ body::after {
 
 .empty-state-icon { font-size: 28px; margin-bottom: 8px; opacity: 0.4; }
 .empty-state-text { font-size: 12px; }
+
+/* Error bubble */
+.message-bubble.error {
+  background: var(--red-bg);
+  border: 1px solid rgba(220, 38, 38, 0.15);
+  color: var(--red);
+}
+
+/* Welcome icon as letter */
+.welcome-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--accent);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+  box-shadow: 0 4px 16px rgba(80, 70, 229, 0.25);
+}
