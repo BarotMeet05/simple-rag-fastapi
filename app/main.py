@@ -143,6 +143,18 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
     )
 
+    # -------------------------------------------------------------------------
+    # CORS Middleware (Must be added FIRST so preflight OPTIONS requests return immediately)
+    # -------------------------------------------------------------------------
+    _app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+        expose_headers=["*"],
+    )
+
     @_app.middleware("http")
     async def log_requests(request, call_next):
         logger.info("--> %s %s", request.method, request.url.path)
@@ -153,19 +165,6 @@ def create_application() -> FastAPI:
         except Exception as e:
             logger.error("!!! %s %s [error=%s]", request.method, request.url.path, e)
             raise
-
-    # -------------------------------------------------------------------------
-    # CORS Middleware
-    # -------------------------------------------------------------------------
-    _app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.allowed_origins if "*" not in settings.allowed_origins else ["*"],
-        allow_origin_regex=r"https://.*" if "*" in settings.allowed_origins else None,
-        allow_credentials=False,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["X-Request-ID"],
-    )
 
     # -------------------------------------------------------------------------
     # Exception Handlers
