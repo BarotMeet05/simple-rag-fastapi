@@ -96,20 +96,9 @@ class ServiceUnavailableError(AppException):
 
 async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
     """
-    Catch any AppException subclass and return a structured JSON error.
-
-    The response body always looks like:
-    {
-        "error": {
-            "code":    "NOT_FOUND",
-            "message": "Document abc123 not found",
-            "status":  404
-        }
-    }
-
-    This consistent envelope makes it easy for frontend code and API consumers
-    to handle errors uniformly.
+    Catch any AppException subclass and return a structured JSON error with CORS headers.
     """
+    origin = request.headers.get("origin", "*")
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -119,17 +108,18 @@ async def app_exception_handler(request: Request, exc: AppException) -> JSONResp
                 "status": exc.status_code,
             }
         },
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        },
     )
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """
-    Catch-all for any exception we didn't anticipate.
-
-    IMPORTANT: Never leak the raw exception message to the client in production.
-    In debug mode we include it to help during development.
+    Catch-all for any exception with CORS headers.
     """
-    # Import here to avoid circular import
     from app.core.config import get_settings
     from app.core.logging import get_logger
 
@@ -139,6 +129,7 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
     settings = get_settings()
     message = str(exc) if settings.debug else "An unexpected error occurred. Please try again."
 
+    origin = request.headers.get("origin", "*")
     return JSONResponse(
         status_code=500,
         content={
@@ -147,6 +138,11 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
                 "message": message,
                 "status": 500,
             }
+        },
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
         },
     )
 
