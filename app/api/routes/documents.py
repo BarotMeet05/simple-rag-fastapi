@@ -103,9 +103,7 @@ async def upload_document(
     4. Service validates, deduplicates, saves, parses
     5. We return the DocumentResponse
     """
-    # Read all bytes from the upload stream
-    # For large files in production, you'd stream to disk instead of reading all at once
-    # (Phase 18 performance optimisation)
+    logger.info("Received POST /documents: filename=%s", file.filename)
     file_bytes = await file.read()
 
     return await service.ingest_document(

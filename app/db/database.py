@@ -163,24 +163,16 @@ session_factory = get_session_factory
 async def init_db() -> None:
     """
     Create all tables defined by ORM models.
-
-    Called once at application startup (in main.py's lifespan).
-
-    WHY NOT just use this instead of Alembic migrations?
-    In development, create_all() is convenient — it creates tables if they
-    don't exist. But it does NOT handle schema changes (adding a column,
-    dropping an index). Alembic generates migration scripts that can be
-    applied incrementally to an existing database without losing data.
-
-    In production, you ALWAYS run Alembic. In development, create_all() is
-    acceptable for quick iteration (we'll add Alembic too).
     """
     from sqlalchemy import text
-    from app.db.models import DocumentChunkModel, DocumentModel  # noqa: F401 — import so Base sees the tables
+    from app.db.models import DocumentChunkModel, DocumentModel  # noqa: F401
 
     engine = get_engine()
     async with engine.begin() as conn:
-        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        try:
+            await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        except Exception as ext_err:
+            logger.warning("CREATE EXTENSION vector skipped/warning: %s", ext_err)
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created/verified")
 

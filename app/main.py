@@ -98,8 +98,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Phase 2+: initialise DB connection pool and create tables
     if settings.database_url:
         from app.db.database import init_db
-        await init_db()
-        logger.info("Database initialised")
+        try:
+            import asyncio
+            await asyncio.wait_for(init_db(), timeout=10.0)
+            logger.info("Database initialised")
+        except Exception as err:
+            logger.warning("Database startup init warning (will retry on query): %s", err)
     else:
         logger.warning("DATABASE_URL not set — running without database (tests only)")
 

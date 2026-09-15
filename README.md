@@ -1,275 +1,184 @@
-# AI Document Intelligence & RAG Platform
+# DocuMind AI — RAG Document Intelligence Platform
 
-> **Production-style learning/portfolio project** — a complete, end-to-end Retrieval-Augmented Generation (RAG) system built to understand modern AI application engineering at a deep level.
+DocuMind AI is an end-to-end Retrieval-Augmented Generation (RAG) system built with FastAPI, PostgreSQL (`pgvector`), Google Gemini, and React. 
+
+Upload your PDF or TXT documents (resumes, policies, reports), ask questions in natural language, and get grounded answers with source citations (file name + page numbers).
 
 ---
 
-## What This Is
+## Key Features
 
-A web-based AI Document Intelligence platform where you can:
-
-- **Upload** PDF and TXT documents
-- **Ask questions** about your documents in natural language
-- **Receive grounded answers** with source citations (document name + page number)
-- **Inspect** the RAG pipeline internals via a debug mode
-- **Evaluate** retrieval and generation quality with a structured test dataset
-
-This is not a ChatGPT wrapper. Every layer — parsing, chunking, embedding, retrieval, prompt construction, generation — is implemented intentionally and explained in detail.
+- **Document Ingestion & Parsing:** Upload PDF and TXT documents. Files are validated, deduplicated using SHA-256 content hashing, and parsed page-by-page using PyMuPDF.
+- **Recursive Text Chunking:** Splits document text into overlapping chunks (~1000 characters, 200-character overlap) prioritizing paragraph and sentence boundaries.
+- **Vector Search (`pgvector`):** Generates 768-dimensional embeddings via Google Gemini (`text-embedding-004`) and performs cosine similarity search directly inside PostgreSQL.
+- **Grounded Q&A (Zero Hallucination):** Answers user prompts using Google Gemini 2.0 Flash (`gemini-2.0-flash`). Enforces strict system prompts and temperature `0.0` so the AI refuses to answer if information is not present in the uploaded context.
+- **Automated Evaluation Harness:** Includes an "LLM-as-a-Judge" evaluation script (`scripts/evaluate.py`) to programmatically score RAG accuracy.
+- **Modern Light Theme UI:** Clean, responsive single-page application built with React and Vite.
 
 ---
 
 ## Architecture
 
 ```
-User
- │
- ▼
-React + TypeScript (Vite)
- │  HTTP/JSON
- ▼
-FastAPI Backend
- │
- ├─── Document Ingestion ──────────────────────┐
- │     PDF/TXT Parser                          │
- │     Text Cleaning                           │
- │     Chunking                                │
- │     Embedding Generation                   │
- │                                             ▼
- │                                     PostgreSQL + pgvector
- │
- └─── RAG Query Pipeline ─────────────────────┐
-       Query Embedding                         │
-       Vector Search ──────────────────────────┤
-       Keyword Search ─────────────────────────┤
-       Hybrid Ranking                          │
-       Reranking (optional)                    │
-       Context Construction                    │
-       LLM Call                                │
-       Answer + Citations ◄────────────────────┘
+User (Browser)
+    │
+    ▼
+React + Vite Frontend (Vercel)
+    │  HTTP / REST API
+    ▼
+FastAPI Backend (Render)
+    │
+    ├─── Ingestion Pipeline ──────────────────────┐
+    │     PyMuPDF Text Parser                      │
+    │     Recursive Chunking                       │
+    │     Gemini Embedding Service                 │
+    │                                              ▼
+    │                                     PostgreSQL + pgvector (Neon)
+    │                                              ▲
+    └─── RAG Search & Chat Pipeline ───────────────┤
+          Question Vectorization ──────────────────┘
+          Cosine Distance Search (<=>)
+          Prompt Construction (Context + Question)
+          Gemini 2.0 Flash Generation
+          Grounded Answer + Page Citations ───────► User
 ```
 
 ---
 
-## Technology Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| Backend framework | FastAPI |
-| Data validation | Pydantic v2 |
-| ASGI server | Uvicorn |
-| Database | PostgreSQL + pgvector |
-| Embeddings | OpenAI `text-embedding-3-small` |
-| LLM | OpenAI `gpt-4o-mini` |
-| PDF parsing | PyMuPDF |
-| Frontend | React + TypeScript + Vite |
-| Testing | pytest + httpx |
-| Containerisation | Docker + Docker Compose |
+| **Frontend** | React, Vite, Custom CSS Design System |
+| **Backend Framework** | FastAPI (Python 3.12+), Uvicorn (ASGI) |
+| **Data Validation & Config** | Pydantic v2, `pydantic-settings` |
+| **Database & Vectors** | PostgreSQL + `pgvector` (AsyncSQLAlchemy, `asyncpg`) |
+| **AI / LLM Integration** | Google Gemini (`gemini-2.0-flash`, `text-embedding-004`) |
+| **PDF Parsing** | PyMuPDF |
+| **Deployment** | Vercel (Frontend), Render (Backend), Neon (Database) |
 
 ---
 
 ## Project Structure
 
 ```
-app/
-├── main.py                    # Application factory, CORS, lifespan
-├── core/
-│   ├── config.py              # Typed configuration (pydantic-settings)
-│   ├── logging.py             # Structured logging setup
-│   └── exceptions.py         # Custom exception hierarchy + handlers
-├── api/
-│   ├── router.py              # Central route aggregation
-│   └── routes/
-│       ├── health.py          # GET /health
-│       ├── documents.py       # CRUD /documents
-│       ├── search.py          # POST /search
-│       └── chat.py            # POST /chat
-├── schemas/
-│   ├── document.py            # Document request/response models
-│   ├── search.py              # Search request/response models
-│   └── chat.py                # Chat request/response models (with citations)
-└── services/
-    └── document_service.py    # Document business logic
-
-tests/
-├── conftest.py                # Fixtures, test client, dependency overrides
-├── test_health.py
-└── test_documents.py
-
-data/documents/                # Place your test documents here (gitignored)
+.
+├── app/                          # FastAPI Backend Application
+│   ├── main.py                   # App factory, CORS, lifespan
+│   ├── api/                      # REST API Routes
+│   │   ├── router.py             # Route aggregator
+│   │   └── routes/               # Health, Documents, Search, Chat
+│   ├── core/                     # Config, Logging, Exception Handlers
+│   ├── db/                       # Async Engine, ORM Models (Document & Chunk)
+│   ├── repositories/             # Database Access Layer (pgvector queries)
+│   ├── schemas/                  # Pydantic Request/Response contracts
+│   └── services/                 # Business logic (Ingestion, Parser, Chunking, Embedding, RAG)
+├── data/                         # Evaluation datasets & test files
+├── docs/                         # Architecture & Deployment Documentation
+├── frontend/                     # React + Vite Frontend Application
+│   ├── src/                      # App layout, Components, API services, Styles
+│   ├── index.html
+│   └── vite.config.js
+├── scripts/                      # Evaluation harness & database helpers
+│   └── evaluate.py
+├── pyproject.toml                # Backend dependencies
+└── requirements.txt              # Render build requirements
 ```
 
 ---
 
-## Local Setup
+## API Endpoints
 
-### Prerequisites
+### Health Check
+- `GET /health` — Verifies backend status and database connectivity.
 
-- Python 3.12+
-- pip
+### Document Management
+- `POST /api/v1/documents` — Upload a PDF or TXT file (multipart/form-data).
+- `GET /api/v1/documents` — List all uploaded documents, newest first.
+- `GET /api/v1/documents/{document_id}` — Get document metadata and status.
+- `DELETE /api/v1/documents/{document_id}` — Delete a document and its chunks.
 
-### Install
+### RAG Search & Chat
+- `POST /api/v1/search` — Perform vector similarity search across all document chunks.
+- `POST /api/v1/chat` — Ask a question; returns a grounded answer with page citations.
+
+---
+
+## Quickstart Guide
+
+### 1. Clone & Setup Backend
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd simple-rag
+# Clone repository
+git clone https://github.com/BarotMeet05/simple-rag-fastapi.git
+cd simple-rag-fastapi
 
-# Create a virtual environment
+# Create & activate virtual environment
 python -m venv .venv
-
-# Activate (Windows PowerShell)
+# Windows PowerShell:
 .venv\Scripts\Activate.ps1
-
-# Activate (macOS/Linux)
+# macOS/Linux:
 source .venv/bin/activate
 
-# Install with dev dependencies
-pip install -e ".[dev]"
-
-# Copy environment template
-cp .env.example .env
-# Edit .env and fill in your values
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-### Run the Server
+### 2. Configure Environment Variables
 
+Create a `.env` file in the root directory:
+
+```env
+APP_NAME="DocuMind AI"
+ENVIRONMENT="development"
+DEBUG=true
+
+# Database URL (Local PostgreSQL or Neon Cloud)
+DATABASE_URL="postgresql+asyncpg://user:password@localhost:5432/ragdb"
+
+# Google Gemini API Key
+GEMINI_API_KEY="your-gemini-api-key"
+```
+
+### 3. Run Backend & Frontend
+
+**Terminal 1 (Backend):**
 ```bash
 uvicorn app.main:app --reload --port 8000
 ```
+- Interactive API Docs: http://localhost:8000/docs
 
-Visit:
-- API: http://localhost:8000
-- Swagger UI: http://localhost:8000/docs
-- Health check: http://localhost:8000/health
-
----
-
-## Environment Variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `APP_NAME` | `AI Document Intelligence` | Application display name |
-| `APP_VERSION` | `0.1.0` | Semver version |
-| `ENVIRONMENT` | `development` | Runtime environment |
-| `DEBUG` | `false` | Enable debug mode |
-| `LOG_LEVEL` | `INFO` | Python log level |
-| `API_V1_PREFIX` | `/api/v1` | API route prefix |
-| `ALLOWED_ORIGINS` | `http://localhost:5173,...` | CORS allowed origins |
-
-Phase 2+ variables (add when needed):
-
-| Variable | Description |
-|---|---|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `OPENAI_API_KEY` | OpenAI API key (never commit!) |
-| `OPENAI_EMBEDDING_MODEL` | Embedding model name |
-| `OPENAI_CHAT_MODEL` | Chat completion model name |
+**Terminal 2 (Frontend):**
+```bash
+cd frontend
+npm install
+npm run dev
+```
+- Frontend UI: http://localhost:5173
 
 ---
 
-## API Reference
+## RAG Evaluation Harness
 
-### Health
-
-| Method | Path | Description |
-|---|---|---|
-| GET | `/health` | Service health check |
-
-### Documents
-
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/v1/documents` | Register a document |
-| GET | `/api/v1/documents` | List all documents |
-| GET | `/api/v1/documents/{id}` | Get document by ID |
-| DELETE | `/api/v1/documents/{id}` | Delete a document |
-
-### Search (Phase 5+)
-
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/v1/search` | Semantic/keyword/hybrid search |
-
-### Chat (Phase 10+)
-
-| Method | Path | Description |
-|---|---|---|
-| POST | `/api/v1/chat` | RAG-powered Q&A |
-
----
-
-## Running Tests
+To run automated accuracy testing against a sample test document using LLM-as-a-Judge:
 
 ```bash
-# Run all tests with verbose output
-pytest tests/ -v
-
-# Run a specific test file
-pytest tests/test_documents.py -v
-
-# Run a specific test
-pytest tests/test_documents.py::TestCreateDocument::test_create_document_returns_201 -v
-
-# Run with coverage (install pytest-cov first)
-pytest tests/ --cov=app --cov-report=term-missing
-```
-
-### Expected Output (Phase 1)
-
-```
-tests/test_health.py::test_health_returns_200                           PASSED
-tests/test_health.py::test_health_response_has_required_fields          PASSED
-tests/test_health.py::test_health_status_is_ok                          PASSED
-tests/test_health.py::test_health_timestamp_is_iso8601                  PASSED
-tests/test_health.py::test_health_content_type_is_json                  PASSED
-tests/test_documents.py::TestCreateDocument::test_create_document_returns_201          PASSED
-... (27 total tests)
+python scripts/evaluate.py
 ```
 
 ---
 
-## Build Phases
+## Deployment
 
-| Phase | Status | Description |
-|---|---|---|
-| 1 | ✅ Complete | FastAPI foundation, CRUD stubs, tests |
-| 2 | 🔜 Next | Document upload, PDF/TXT parsing |
-| 3 | 📋 Planned | Chunking (size, overlap, strategies) |
-| 4 | 📋 Planned | Embeddings + pgvector storage |
-| 5 | 📋 Planned | Vector search |
-| 6 | 📋 Planned | Metadata filtering |
-| 7 | 📋 Planned | Keyword search |
-| 8 | 📋 Planned | Hybrid search (RRF) |
-| 9 | 📋 Planned | Reranking |
-| 10 | 📋 Planned | Full RAG pipeline |
-| 11 | 📋 Planned | Source citations |
-| 12 | 📋 Planned | Structured output |
-| 13 | 📋 Planned | Conversational RAG |
-| 14 | 📋 Planned | RAG evaluation |
-| 15–20 | 📋 Planned | Prompt testing, security, observability, Docker, frontend |
+Detailed deployment instructions for free hosting:
+- **Frontend:** Vercel
+- **Backend:** Render
+- **Database:** Neon PostgreSQL
 
----
-
-## Security Notes
-
-- API keys are **never** committed to version control
-- Use `.env` for local secrets; `.env.example` contains only placeholders
-- Document contents are not logged
-- CORS is configured for specific origins, not `*`
-
----
-
-## Known Limitations (Phase 1)
-
-- Storage is **in-memory** — data resets on every server restart
-- No file upload yet — documents are registered via JSON metadata only
-- Search and chat are **stub endpoints** — they return empty/placeholder responses
-- No authentication or authorisation
-
-These are all intentional — this is a learning project built phase by phase.
+See [docs/PHASE_7_README.md](docs/PHASE_7_README.md) for step-by-step instructions.
 
 ---
 
 ## License
 
-MIT — see LICENSE file.
+MIT License — see `LICENSE` for details.
