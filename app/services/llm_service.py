@@ -44,7 +44,7 @@ class LLMService:
         self, 
         question: str, 
         context_chunks: list[dict], 
-        model: str = "gemini-2.0-flash"
+        model: str = "gemini-3.6-flash"
     ) -> str:
         """
         Generate an answer to a question using the provided context chunks.
