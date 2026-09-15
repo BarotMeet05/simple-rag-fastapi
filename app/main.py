@@ -143,11 +143,20 @@ def create_application() -> FastAPI:
         lifespan=lifespan,
     )
 
+    @_app.middleware("http")
+    async def log_requests(request, call_next):
+        logger.info("--> %s %s", request.method, request.url.path)
+        try:
+            response = await call_next(request)
+            logger.info("<-- %s %s [status=%d]", request.method, request.url.path, response.status_code)
+            return response
+        except Exception as e:
+            logger.error("!!! %s %s [error=%s]", request.method, request.url.path, e)
+            raise
+
     # -------------------------------------------------------------------------
     # CORS Middleware
     # -------------------------------------------------------------------------
-    # This must be added BEFORE routes are registered.
-    # Middleware wraps every request/response — order matters.
     _app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
