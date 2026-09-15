@@ -115,7 +115,7 @@ class Settings(BaseSettings):
         description="Google Gemini API key for embeddings and generation",
     )
     embedding_model: str = Field(
-        default="text-embedding-004",
+        default="gemini-embedding-001",
         description="Google Gemini embedding model name",
     )
 
