@@ -132,8 +132,8 @@ Scroll down to the **"Environment Variables"** section and click **"Add Environm
 4. When you see `Uvicorn running on http://0.0.0.0:XXXX`, it's live!
 
 **Step 7 — Test the backend**
-1. Render gives you a URL like `https://simple-rag-api.onrender.com`
-2. Open `https://simple-rag-api.onrender.com/docs` in your browser
+1. Render gives you a URL like `https://simple-rag-fastapi.onrender.com`
+2. Open `https://simple-rag-fastapi.onrender.com/docs` in your browser
 3. You should see the Swagger UI! Your backend is now live on the internet.
 
 > Save this URL — you'll need it in Part 2 when configuring the frontend.
@@ -173,7 +173,7 @@ Expand the **"Environment Variables"** section and add:
 
 | Key | Value |
 |---|---|
-| `VITE_API_URL` | `https://simple-rag-api.onrender.com` (your Render backend URL from Part 1) |
+| `VITE_API_URL` | `https://simple-rag-fastapi.onrender.com` (your Render backend URL from Part 1) |
 
 IMPORTANT: The variable MUST start with `VITE_` — Vite only exposes environment variables that start with this prefix to the frontend code. Without the `VITE_` prefix, the variable will be invisible to your app.
 
@@ -251,6 +251,6 @@ You never have to manually deploy again. This is called CI/CD (Continuous Integr
 | Component | Platform | URL Pattern | Cost |
 |---|---|---|---|
 | Frontend | Vercel | `https://documind.vercel.app` | Free |
-| Backend | Render | `https://simple-rag-api.onrender.com` | Free |
+| Backend | Render | `https://simple-rag-fastapi.onrender.com` | Free |
 | Database | Neon | (connection string, no public URL) | Free |
 | AI | Google Gemini | (API key, no public URL) | Free tier |
