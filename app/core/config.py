@@ -78,9 +78,9 @@ class Settings(BaseSettings):
     # Stored as a comma-separated string in the env var because environment
     # variables are always strings. We parse it into a list below.
     allowed_origins_str: str = Field(
-        default="http://localhost:5173,http://localhost:3000",
+        default="*",
         alias="ALLOWED_ORIGINS",
-        description="Comma-separated list of allowed CORS origins",
+        description="Comma-separated list of allowed CORS origins or * for all",
     )
 
     @property
